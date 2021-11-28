@@ -20,4 +20,17 @@ const getAssetHistory = (id) => {
     .then((res) => res.json())
     .then((data) => data.data);
 };
-export default { getAssets, getAsset, getAssetHistory };
+
+const getMarkets = (id) => {
+  return fetch(`${API}/${id}/markets?limit=5`)
+    .then((res) => res.json())
+    .then((data) => data.data);
+
+}
+
+const getExchange = (id) => {
+  return fetch(`https://api.coincap.io/v2/exchanges/${id}`)
+    .then((res) => res.json())
+    .then((data) => data.data)
+}
+export default { getAssets, getAsset, getAssetHistory, getMarkets, getExchange };
