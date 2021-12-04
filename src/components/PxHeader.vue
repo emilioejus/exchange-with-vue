@@ -5,7 +5,7 @@
         <div class="flex items-center flex-shrink-0 text-white mr-6">
           <px-icon class="mr-2" />
           <router-link to="/" class="font-semibold text-xl tracking-tight"
-            >PlatziExchange</router-link
+            >IntercambioExchange</router-link
           >
         </div>
         <div
