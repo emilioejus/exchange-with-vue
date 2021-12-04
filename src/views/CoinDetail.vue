@@ -48,6 +48,7 @@
 
         <div class="my-10 sm:mt-0 flex flex-col justify-center text-center">
           <button
+            @click="toggleConvert"
             class="
               bg-green-500
               hover:bg-green-700
@@ -58,14 +59,16 @@
               rounded
             "
           >
-            Cambiar
+            {{ fromUsd ? `USD a ${asset.symbol}` : `${asset.symbol} a USD` }}
           </button>
 
           <div class="flex flex-row my-5">
             <label class="w-full" for="convertValue">
               <input
+                v-model="convertValue"
                 id="convertValue"
                 type="number"
+                :placeholder="`Valor en ${fromUsd ? 'USD' : asset.symbol}`"
                 class="
                   text-center
                   bg-white
@@ -83,7 +86,9 @@
             </label>
           </div>
 
-          <span class="text-xl"></span>
+          <span class="text-xl"
+            >{{ convertResult }} {{ fromUsd ? asset.symbol : "USD" }}</span
+          >
         </div>
       </div>
       <line-chart
@@ -95,32 +100,37 @@
 
       <h3 class="text-xl my-10">Mejores Ofertas de Cambio</h3>
       <table>
-        <tr 
+        <tr
           v-for="m in markets"
           :key="`${m.exchangeId}-${m.priceUsd}`"
           class="border-b"
         >
           <td>
-            <b>{{m.exchangeId}}</b>
+            <b>{{ m.exchangeId }}</b>
           </td>
-          <td>{{m.priceUsd | dollar}}</td>
-          <td>{{m.baseSymbol}} / {{m.quoteSymbol}}</td>
+          <td>{{ m.priceUsd | dollar }}</td>
+          <td>{{ m.baseSymbol }} / {{ m.quoteSymbol }}</td>
           <td>
-            <px-button :is-loading="m.isLoading || false" v-if="!m.url" @customClick="getLink(m)">
+            <px-button
+              :is-loading="m.isLoading || false"
+              v-if="!m.url"
+              @customClick="getLink(m)"
+            >
               <slot>Obtener Link</slot>
-            </px-button>  
-            <a v-else class="hover:underline text-green-600" target="_blanck">{{m.url}}</a>
+            </px-button>
+            <a v-else class="hover:underline text-green-600" target="_blanck">{{
+              m.url
+            }}</a>
           </td>
         </tr>
       </table>
-
     </template>
   </div>
 </template>
 
 <script>
 import api from "@/api";
-import PxButton from "@/components/PxButton"
+import PxButton from "@/components/PxButton";
 
 export default {
   name: "CoinDetail",
@@ -131,12 +141,25 @@ export default {
       history: [],
       markets: [],
       isLoading: false,
+      fromUsd: true,
+      convertValue: null,
     };
   },
 
   components: { PxButton },
 
   computed: {
+    convertResult() {
+      if (!this.convertValue) {
+        return 0;
+      }
+
+      const result = this.fromUsd
+        ? this.convertValue / this.asset.priceUsd
+        : this.convertValue * this.asset.priceUsd;
+
+      return result.toFixed(4);
+    },
     min() {
       return Math.min(
         ...this.history.map((h) => parseFloat(h.priceUsd).toFixed(2))
@@ -155,22 +178,37 @@ export default {
     },
   },
 
+  watch: {
+    $route() {
+      this.getCoin();
+    },
+  },
+
   created() {
     this.getCoin();
   },
 
   methods: {
+    toggleConvert() {
+      this.fromUsd = !this.fromUsd;
+    },
+
     getLink(objec) {
-      this.$set(objec, "isLoading", true)
-      api.getExchange(objec.exchangeId)
-        .then(res => this.$set(objec, "url", res.exchangeUrl))
-        .finally(() => this.$set(objec, "isLoading", false))
+      this.$set(objec, "isLoading", true);
+      api
+        .getExchange(objec.exchangeId)
+        .then((res) => this.$set(objec, "url", res.exchangeUrl))
+        .finally(() => this.$set(objec, "isLoading", false));
     },
 
     getCoin() {
       this.isLoading = true;
       const id = this.$route.params.id;
-      Promise.all([api.getAsset(id), api.getAssetHistory(id), api.getMarkets(id)])
+      Promise.all([
+        api.getAsset(id),
+        api.getAssetHistory(id),
+        api.getMarkets(id),
+      ])
         .then(([asset, history, markets]) => {
           this.asset = asset;
           this.history = history;

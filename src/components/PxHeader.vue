@@ -18,7 +18,11 @@
             lg:flex lg:items-center lg:w-auto
           "
         >
-          <div class="text-sm lg:flex-grow"></div>
+          <div class="text-sm lg:flex-grow">
+            <router-link v-for="l in links" :key="l.title" :to="l.to">
+              {{ l.title }}
+            </router-link>
+          </div>
         </div>
       </nav>
     </nav>
@@ -31,5 +35,12 @@ import PxIcon from "@/components/PxIcon";
 export default {
   name: "PxHeader",
   components: { PxIcon },
+
+  props: {
+    links: {
+      type: Array,
+      default: () => [],
+    },
+  },
 };
 </script>
